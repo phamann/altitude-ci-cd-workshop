@@ -1,0 +1,31 @@
+dist: trusty
+sudo: false
+
+# Only trigger builds on master/pr and release tags
+branches:
+  only:
+    - master
+    - /^v?([0-9]*)\.([0-9]*)\.([0-9]*)$/
+
+env:
+  # This environment variable tells Terraform not to prompt for input. This is
+  # not required, but if we make a mistake, the Travis builder will hang waiting
+  # for user input, tieing up unnecessary resources.
+  - TF_INPUT=false
+
+# Install terraform
+before_install:
+  - curl -sLo /tmp/terraform.zip https://releases.hashicorp.com/terraform/0.9.8/terraform_0.9.8_linux_amd64.zip
+  - unzip /tmp/terraform.zip -d /tmp
+  - mkdir ~/bin
+  - mv /tmp/terraform ~/bin
+  - export PATH="~/bin:$PATH"
+
+script: terraform plan ./terraform
+
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: terraform apply ./terraform
+  on:
+    branch: master
